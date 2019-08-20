@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class ShuffleV2Block(nn.Module):
     def __init__(self, inp, oup, mid_channels, *, ksize, stride):
         super(ShuffleV2Block, self).__init__()
@@ -21,7 +22,8 @@ class ShuffleV2Block(nn.Module):
             nn.BatchNorm2d(mid_channels),
             nn.ReLU(inplace=True),
             # dw
-            nn.Conv2d(mid_channels, mid_channels, ksize, stride, pad, groups=mid_channels, bias=False),
+            nn.Conv2d(mid_channels, mid_channels, ksize, stride,
+                      pad, groups=mid_channels, bias=False),
             nn.BatchNorm2d(mid_channels),
             # pw-linear
             nn.Conv2d(mid_channels, outputs, 1, 1, 0, bias=False),
@@ -33,7 +35,8 @@ class ShuffleV2Block(nn.Module):
         if stride == 2:
             branch_proj = [
                 # dw
-                nn.Conv2d(inp, inp, ksize, stride, pad, groups=inp, bias=False),
+                nn.Conv2d(inp, inp, ksize, stride,
+                          pad, groups=inp, bias=False),
                 nn.BatchNorm2d(inp),
                 # pw-linear
                 nn.Conv2d(inp, inp, 1, 1, 0, bias=False),
@@ -45,13 +48,14 @@ class ShuffleV2Block(nn.Module):
             self.branch_proj = None
 
     def forward(self, old_x):
-        if self.stride==1:
+        if self.stride == 1:
             x_proj, x = self.channel_shuffle(old_x)
             return torch.cat((x_proj, self.branch_main(x)), 1)
-        elif self.stride==2:
+        elif self.stride == 2:
             x_proj = old_x
             x = old_x
-            return torch.cat((self.branch_proj(x_proj), self.branch_main(x)), 1)
+            return torch.cat(
+                (self.branch_proj(x_proj), self.branch_main(x)), 1)
 
     def channel_shuffle(self, x):
         batchsize, num_channels, height, width = x.data.size()
